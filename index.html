@@ -72,7 +72,7 @@
   <div class="vignette"></div>
   <div class="dust" id="dust"></div>
 
-  <button id="snd">🔊 Tap to enable sound</button>
+  <button id="snd">🔊 Sound on</button>
   <main id="main">
     <div class="photo"><img src="foto.jpg" alt="Micaela" onerror="this.style.display='none'"></div>
     <h1 id="title">Micaela's birthday is coming</h1>
@@ -116,9 +116,22 @@
     $('h').textContent = pad(h); $('m').textContent = pad(m); $('s').textContent = pad(s);
   }
   // Sonido tipo reloj: golpe grave + click corto, sintetizado (sin archivos)
-  let ctx = null;
+  let ctx = null, muted = false, unlocked = false;
+  // Si existe tick.mp3 en la carpeta, se usa ese sonido (1 segundo por tic); si no, el sintetizado
+  const tickFile = new Audio('tick.mp3');
+  let tickFileOk = false;
+  tickFile.addEventListener('canplaythrough', () => tickFileOk = true);
+  tickFile.preload = 'auto';
+  function playFile() {
+    tickFile.currentTime = 0;
+    tickFile.play().then(() => { unlocked = true; }).catch(() => {});
+    setTimeout(() => tickFile.pause(), 950);
+  }
   function tickSound() {
-    if (!ctx) return;
+    if (muted) return;
+    if (tickFileOk) return playFile();
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
+    if (ctx.state !== 'running') return;
     const t = ctx.currentTime;
     const osc = ctx.createOscillator(), g = ctx.createGain();
     osc.type = 'sine';
@@ -136,11 +149,23 @@
     hp.type = 'highpass'; hp.frequency.value = 2500; ng.gain.value = 0.25;
     n.buffer = buf; n.connect(hp).connect(ng).connect(ctx.destination); n.start(t);
   }
-  $('snd').addEventListener('click', () => {
-    if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-    ctx.resume();
-    $('snd').style.display = 'none';
+  // Los navegadores bloquean el audio hasta el primer toque: apenas haya cualquier interacción, se activa
+  function unlock() {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (ctx) ctx.resume();
+    unlocked = true;
+    ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.removeEventListener(ev, unlock));
+  }
+  ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, unlock));
+  try { ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume(); } catch (e) {}
+
+  $('snd').addEventListener('click', e => {
+    e.stopPropagation();
+    muted = !muted;
+    $('snd').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
+    try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (err) {}
   });
+  try { if (localStorage.getItem('muted') === '1') { muted = true; $('snd').textContent = '🔇 Sound off'; } } catch (e) {}
 
   const timer = setInterval(() => { tick(); tickSound(); }, 1000); tick();
 
