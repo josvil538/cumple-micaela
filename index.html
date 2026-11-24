@@ -10,32 +10,43 @@
   * { box-sizing: border-box; margin: 0; }
   html, body { height: 100%; background: #050a06; color: #fff; font-family: 'Montserrat', sans-serif; overflow: hidden; }
 
-  /* Fondo: si pones fondo.jpg en esta carpeta lo usa; si no, usa el vitral generado */
+  /* Fondo estilo DOOM: infierno carmesí + brillo verde tóxico, con aura de Bruja Escarlata */
   .bg {
     position: fixed; inset: 0;
     background:
       url("fondo.jpg") center/cover no-repeat,
-      radial-gradient(ellipse at 60% 30%, rgba(210,255,120,.85) 0%, rgba(90,200,60,.55) 22%, rgba(10,70,40,.7) 55%, #030805 100%);
+      radial-gradient(ellipse 70% 45% at 50% 105%, rgba(255,60,20,.85) 0%, rgba(170,15,25,.55) 40%, transparent 75%),
+      radial-gradient(ellipse 55% 40% at 50% 0%, rgba(90,255,80,.45) 0%, rgba(20,110,50,.3) 45%, transparent 75%),
+      radial-gradient(ellipse 45% 60% at 0% 55%, rgba(200,20,50,.45) 0%, transparent 70%),
+      radial-gradient(ellipse 45% 60% at 100% 55%, rgba(60,200,70,.35) 0%, transparent 70%),
+      linear-gradient(#0a0305, #060a05);
   }
-  .glass { position: fixed; inset: 0; opacity: .55; mix-blend-mode: multiply; }
-  .glass svg { width: 100%; height: 100%; }
-  .vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.85) 100%); }
+  /* humo de magia del caos girando despacio */
+  .bg::after { content: ""; position: absolute; inset: -30%; opacity: .35; filter: blur(60px);
+    background: conic-gradient(from 0deg at 50% 55%, #ff1f3d, transparent 18%, #4dff4d 32%, transparent 50%, #c4002b 68%, transparent 82%, #ff1f3d);
+    animation: swirl 40s linear infinite; }
+  @keyframes swirl { to { transform: rotate(360deg); } }
+  .vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.9) 100%); }
 
-  /* partículas */
-  .dust { position: fixed; inset: 0; pointer-events: none; }
-  .dust i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(200,255,150,.7);
-            animation: float linear infinite; }
+  /* brasas */
+  .dust { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .dust i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,80,50,.85);
+            box-shadow: 0 0 6px 1px rgba(255,60,40,.7); animation: float linear infinite; }
+  .dust i:nth-child(3n) { background: rgba(120,255,110,.8); box-shadow: 0 0 6px 1px rgba(90,255,90,.6); }
   @keyframes float { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-120vh); opacity: 0; } }
 
   main { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column;
-         align-items: center; justify-content: center; gap: 2.2vh; padding: 16px; text-align: center; }
+         align-items: center; justify-content: center; gap: 2vh; padding: 16px; text-align: center; }
 
-  .photo { width: min(34vh, 60vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
-           border: 3px solid rgba(180,255,120,.9);
-           box-shadow: 0 0 30px 6px rgba(109,255,58,.55), 0 0 90px 20px rgba(109,255,58,.25);
-           background: #0b1a0d; animation: pulse 3.5s ease-in-out infinite; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  @keyframes pulse { 50% { box-shadow: 0 0 40px 10px rgba(109,255,58,.7), 0 0 120px 30px rgba(109,255,58,.3); } }
+  .stage { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 44px); }
+  .frame { overflow: hidden; background: #120406; border-radius: 6px; border: 2px solid rgba(255,70,80,.9);
+           box-shadow: 0 0 28px 4px rgba(255,40,60,.55), 0 0 80px 14px rgba(80,255,80,.2);
+           animation: pulse 3.5s ease-in-out infinite; }
+  .frame img { display: block; height: 100%; width: auto; max-width: 100%; object-fit: cover; }
+  .throne { height: min(42vh, 62vw); }
+  .side   { height: min(34vh, 50vw); transform: rotate(2deg); }
+  @keyframes pulse { 50% { box-shadow: 0 0 40px 10px rgba(255,40,60,.75), 0 0 110px 26px rgba(80,255,80,.3); } }
+  @media (max-width: 640px) { .stage { flex-direction: column; } .throne { height: 32vh; } .side { height: 22vh; } }
 
   h1 { font-size: clamp(20px, 3.6vw, 44px); letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
        text-shadow: 0 2px 20px rgba(0,0,0,.8); }
@@ -53,34 +64,43 @@
   .label { font-size: clamp(9px, 1.1vw, 14px); letter-spacing: .12em; font-weight: 700; text-transform: uppercase; opacity: .9; }
   .sep { font-size: clamp(36px, 7vw, 90px); font-weight: 600; line-height: 1.05; opacity: .9; }
 
-  #snd { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 5; cursor: pointer;
-         padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(180,255,120,.8); color: #fff;
-         background: rgba(0,0,0,.55); font: 600 13px 'Montserrat', sans-serif; letter-spacing: .08em; }
-  #snd:hover { background: rgba(109,255,58,.25); }
+  #snd { position: fixed; top: 16px; left: 16px; z-index: 5; display: flex; align-items: center; height: 44px;
+         padding: 0 8px; border-radius: 999px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
+  #vicon { background: none; border: 0; cursor: pointer; display: grid; place-items: center; padding: 4px; }
+  #snd .w1, #snd .w2, #snd .x { display: none; }
+  #snd.high .w1, #snd.high .w2, #snd.low .w1, #snd.off .x { display: inline; }
+  #vol { -webkit-appearance: none; appearance: none; width: 0; opacity: 0; height: 4px; border-radius: 2px; cursor: pointer;
+         margin: 0; outline: none; --p: 80%;
+         background: linear-gradient(to right, #fff var(--p), rgba(255,255,255,.3) var(--p));
+         transition: width .2s ease, opacity .2s ease, margin .2s ease; }
+  #snd:hover #vol, #snd:focus-within #vol { width: 76px; opacity: 1; margin: 0 8px 0 4px; }
+  @media (hover: none) { #vol { width: 76px; opacity: 1; margin: 0 8px 0 4px; } }
+  #vol::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+  #vol::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; }
   .done h1 { font-size: clamp(28px, 6vw, 72px); }
 </style>
 </head>
 <body>
   <div class="bg"></div>
-  <div class="glass">
-    <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 700">
-      <defs>
-        <pattern id="arch" width="150" height="240" patternUnits="userSpaceOnUse">
-          <path d="M10 240 V90 Q10 20 75 0 Q140 20 140 90 V240" fill="none" stroke="#02130a" stroke-width="7"/>
-          <path d="M35 240 V100 Q35 50 75 30 Q115 50 115 100 V240" fill="none" stroke="#02130a" stroke-width="5"/>
-          <path d="M75 30 V240 M10 120 H140" stroke="#02130a" stroke-width="4"/>
-          <circle cx="75" cy="85" r="14" fill="none" stroke="#02130a" stroke-width="4"/>
-        </pattern>
-      </defs>
-      <rect width="1200" height="700" fill="url(#arch)"/>
-    </svg>
-  </div>
   <div class="vignette"></div>
   <div class="dust" id="dust"></div>
 
-  <button id="snd">🔊 Sound on</button>
+  <div id="snd" class="high">
+    <button id="vicon" aria-label="Volume">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path class="sp" d="M3 9.5v5h4l5 4v-13l-5 4z" fill="#fff"/>
+        <path class="w1" d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/>
+        <path class="w2" d="M18 7a7 7 0 0 1 0 10"/>
+        <path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/>
+      </svg>
+    </button>
+    <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+  </div>
   <main id="main">
-    <div class="photo"><img src="foto.jpg" alt="Micaela" onerror="this.style.display='none'"></div>
+    <div class="stage">
+      <div class="frame throne"><img src="trono.jpg" alt="Micaela on the throne" onerror="this.style.display='none'"></div>
+      <div class="frame side"><img src="foto.jpg" alt="Micaela" onerror="this.style.display='none'"></div>
+    </div>
     <h1 id="title">Micaela's birthday is coming</h1>
     <div class="clock" id="clock">
       <div class="unit"><div class="num" id="mo">00</div><div class="label">Months</div></div>
@@ -136,28 +156,75 @@
     }
     el.appendChild(next);
   }
-  // Sonido: solo tick.mp3 (~41 s), de corrido en bucle. Al terminar vuelve a empezar solo.
-  let muted = false;
-  const tickFile = new Audio('tick.mp3');
-  tickFile.loop = true;
-  tickFile.preload = 'auto';
-  function playFile() { if (!muted) tickFile.play().catch(() => {}); }
-  function stopAll() { tickFile.pause(); }
+  // Sonido: solo tick.mp3, en bucle SIN pausa. Se decodifica con Web Audio y se recorta el
+  // silencio del inicio y del final para que al terminar vuelva a arrancar al instante.
+  let muted = false, curVol = 0.8;
+  let ctx = null, gain = null, src = null, buf = null, wantPlay = false, waState = 'loading';
+  const tickFile = new Audio('tick.mp3');   // respaldo si Web Audio no puede cargar el archivo
+  tickFile.loop = true; tickFile.preload = 'auto';
+
+  function trimBounds(b) {
+    const th = 0.01, n = b.length;
+    const chs = Array.from({ length: b.numberOfChannels }, (_, i) => b.getChannelData(i));
+    const loud = i => chs.some(c => Math.abs(c[i]) > th);
+    let s = 0, e = n - 1;
+    while (s < n && !loud(s)) s++;
+    while (e > s && !loud(e)) e--;
+    return [s / b.sampleRate, (e + 1) / b.sampleRate];
+  }
+  async function initWA() {
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      gain = ctx.createGain(); gain.gain.value = curVol; gain.connect(ctx.destination);
+      const r = await fetch('tick.mp3');
+      buf = await ctx.decodeAudioData(await r.arrayBuffer());
+      waState = 'ok';
+    } catch (e) { waState = 'fail'; }
+    if (wantPlay) playFile();
+  }
+  function startWA() {
+    if (src) return;
+    const [ls, le] = trimBounds(buf);
+    src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    src.loopStart = ls; src.loopEnd = le;
+    src.connect(gain); src.start(0, ls);
+  }
+  function playFile() {
+    wantPlay = true;
+    if (ctx) ctx.resume();
+    if (waState === 'ok') startWA();
+    else if (waState === 'fail') tickFile.play().catch(() => {});
+  }
+  function stopAll() {
+    wantPlay = false;
+    if (src) { try { src.stop(); } catch (e) {} src = null; }
+    tickFile.pause();
+  }
 
   // Los navegadores bloquean el audio hasta el primer toque: apenas haya cualquier interacción, arranca
   const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
   function unlock() { playFile(); events.forEach(ev => window.removeEventListener(ev, unlock)); }
   events.forEach(ev => window.addEventListener(ev, unlock));
 
-  $('snd').addEventListener('click', e => {
-    e.stopPropagation();
-    muted = !muted;
-    if (muted) stopAll(); else playFile();
-    $('snd').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
-    try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (err) {}
-  });
-  try { if (localStorage.getItem('muted') === '1') { muted = true; $('snd').textContent = '🔇 Sound off'; } } catch (e) {}
-  playFile();   // si el navegador lo permite, suena apenas carga
+  // Control de volumen estilo YouTube: icono = mute/unmute, barra = volumen
+  const snd = $('snd'), vol = $('vol');
+  let lastVol = 0.8;
+  function applyVolume(v) {
+    v = Math.min(1, Math.max(0, v));
+    curVol = v; muted = (v === 0); tickFile.volume = v;
+    if (gain) gain.gain.value = v;
+    vol.value = v; vol.style.setProperty('--p', (v * 100) + '%');
+    snd.className = v === 0 ? 'off' : v < 0.5 ? 'low' : 'high';
+    if (v > 0) lastVol = v;
+    try { localStorage.setItem('vol', String(v)); } catch (err) {}
+  }
+  vol.addEventListener('input', () => applyVolume(+vol.value));
+  $('vicon').addEventListener('click', () => applyVolume(muted ? lastVol : 0));
+  let saved = 0.8;
+  try { const sv = localStorage.getItem('vol'); if (sv !== null) saved = +sv; } catch (e) {}
+  applyVolume(saved);
+  initWA();
+  wantPlay = true;   // si el navegador lo permite, suena apenas carga
 
   const timer = setInterval(tick, 1000); tick();
 
