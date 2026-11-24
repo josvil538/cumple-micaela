@@ -122,13 +122,20 @@
   let tickFileOk = false;
   tickFile.addEventListener('canplaythrough', () => tickFileOk = true);
   tickFile.preload = 'auto';
+  let stopTimer = null;
   function playFile() {
+    clearTimeout(stopTimer);
+    tickFile.pause();
     tickFile.currentTime = 0;
     tickFile.play().then(() => { unlocked = true; }).catch(() => {});
-    setTimeout(() => tickFile.pause(), 950);
+    stopTimer = setTimeout(() => tickFile.pause(), 950);
   }
+  let lastTickAt = 0;
   function tickSound() {
     if (muted) return;
+    const nowMs = Date.now();
+    if (nowMs - lastTickAt < 700) return;   // evita sonidos duplicados
+    lastTickAt = nowMs;
     if (tickFileOk) return playFile();
     if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
     if (ctx.state !== 'running') return;
@@ -152,7 +159,7 @@
   // Los navegadores bloquean el audio hasta el primer toque: apenas haya cualquier interacción, se activa
   function unlock() {
     if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-    if (ctx) ctx.resume();
+    if (ctx && !muted) ctx.resume();
     unlocked = true;
     ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.removeEventListener(ev, unlock));
   }
@@ -162,6 +169,10 @@
   $('snd').addEventListener('click', e => {
     e.stopPropagation();
     muted = !muted;
+    if (muted) {
+      clearTimeout(stopTimer); tickFile.pause();
+      if (ctx && ctx.state === 'running') ctx.suspend();
+    } else if (ctx) { ctx.resume(); }
     $('snd').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
     try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (err) {}
   });
