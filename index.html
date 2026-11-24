@@ -101,6 +101,7 @@
       $('main').classList.add('done');
       $('title').textContent = "Happy Birthday, Micaela! 🎂";
       $('clock').style.display = 'none';
+      stopAll();
       return clearInterval(timer);
     }
     // meses calendario completos + resto
@@ -120,23 +121,22 @@
   // Si existe tick.mp3 en la carpeta, se usa ese sonido (1 segundo por tic); si no, el sintetizado
   // Cada tic reproduce el archivo completo en su propia instancia, así el eco/rebote
   // de un tic sigue sonando de fondo mientras empieza el siguiente.
-  const tickFile = new Audio('tick.mp3');   // solo para detectar si el archivo existe
+  // tick.mp3 (~41 s) suena de corrido en bucle: al terminar vuelve a empezar solo.
+  const tickFile = new Audio('tick.mp3');
+  tickFile.loop = true;
   tickFile.preload = 'auto';
-  const playing = new Set();
   function playFile() {
-    const a = new Audio('tick.mp3');
-    playing.add(a);
-    a.addEventListener('ended', () => playing.delete(a));
-    a.play().then(() => { unlocked = true; }).catch(() => playing.delete(a));
+    if (muted) return;
+    tickFile.play().then(() => { unlocked = true; }).catch(() => {});
   }
-  function stopAll() { playing.forEach(a => a.pause()); playing.clear(); }
+  function stopAll() { tickFile.pause(); }
   let lastTickAt = 0;
   function tickSound() {
     if (muted) return;
+    if (!tickFile.error) { if (tickFile.paused) playFile(); return; }   // con tick.mp3 no hace falta un sonido por segundo
     const nowMs = Date.now();
     if (nowMs - lastTickAt < 700) return;   // evita sonidos duplicados
     lastTickAt = nowMs;
-    if (!tickFile.error) return playFile();   // usa tick.mp3; el sintetizado solo si el archivo falla
     if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
     if (ctx.state !== 'running') return;
     const t = ctx.currentTime;
@@ -160,6 +160,7 @@
   function unlock() {
     if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
     if (ctx && !muted) ctx.resume();
+    playFile();
     unlocked = true;
     ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.removeEventListener(ev, unlock));
   }
@@ -172,7 +173,7 @@
     if (muted) {
       stopAll();
       if (ctx && ctx.state === 'running') ctx.suspend();
-    } else if (ctx) { ctx.resume(); }
+    } else { if (ctx) ctx.resume(); playFile(); }
     $('snd').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
     try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (err) {}
   });
