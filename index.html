@@ -136,7 +136,7 @@
     const nowMs = Date.now();
     if (nowMs - lastTickAt < 700) return;   // evita sonidos duplicados
     lastTickAt = nowMs;
-    if (tickFileOk) return playFile();
+    if (!tickFile.error) return playFile();   // usa tick.mp3; el sintetizado solo si el archivo falla
     if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
     if (ctx.state !== 'running') return;
     const t = ctx.currentTime;
