@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Micaela's Birthday Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --green:#6dff3a; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #050a06; color: #fff; font-family: 'Montserrat', sans-serif; overflow: hidden; }
+
+  /* Fondo: si pones fondo.jpg en esta carpeta lo usa; si no, usa el vitral generado */
+  .bg {
+    position: fixed; inset: 0;
+    background:
+      url("fondo.jpg") center/cover no-repeat,
+      radial-gradient(ellipse at 60% 30%, rgba(210,255,120,.85) 0%, rgba(90,200,60,.55) 22%, rgba(10,70,40,.7) 55%, #030805 100%);
+  }
+  .glass { position: fixed; inset: 0; opacity: .55; mix-blend-mode: multiply; }
+  .glass svg { width: 100%; height: 100%; }
+  .vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.85) 100%); }
+
+  /* partículas */
+  .dust { position: fixed; inset: 0; pointer-events: none; }
+  .dust i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(200,255,150,.7);
+            animation: float linear infinite; }
+  @keyframes float { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-120vh); opacity: 0; } }
+
+  main { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column;
+         align-items: center; justify-content: center; gap: 2.2vh; padding: 16px; text-align: center; }
+
+  .photo { width: min(34vh, 60vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+           border: 3px solid rgba(180,255,120,.9);
+           box-shadow: 0 0 30px 6px rgba(109,255,58,.55), 0 0 90px 20px rgba(109,255,58,.25);
+           background: #0b1a0d; animation: pulse 3.5s ease-in-out infinite; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @keyframes pulse { 50% { box-shadow: 0 0 40px 10px rgba(109,255,58,.7), 0 0 120px 30px rgba(109,255,58,.3); } }
+
+  h1 { font-size: clamp(20px, 3.6vw, 44px); letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+       text-shadow: 0 2px 20px rgba(0,0,0,.8); }
+
+  .clock { display: flex; align-items: flex-start; gap: clamp(8px, 2vw, 28px); }
+  .unit { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .num { font-size: clamp(44px, 9vw, 110px); font-weight: 600; line-height: 1; letter-spacing: .06em;
+         font-variant-numeric: tabular-nums; text-shadow: 0 0 25px rgba(0,0,0,.7); }
+  .label { font-size: clamp(9px, 1.1vw, 14px); letter-spacing: .12em; font-weight: 700; text-transform: uppercase; opacity: .9; }
+  .sep { font-size: clamp(36px, 7vw, 90px); font-weight: 600; line-height: 1.05; opacity: .9; }
+
+  #snd { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 5; cursor: pointer;
+         padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(180,255,120,.8); color: #fff;
+         background: rgba(0,0,0,.55); font: 600 13px 'Montserrat', sans-serif; letter-spacing: .08em; }
+  #snd:hover { background: rgba(109,255,58,.25); }
+  .done h1 { font-size: clamp(28px, 6vw, 72px); }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="glass">
+    <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 700">
+      <defs>
+        <pattern id="arch" width="150" height="240" patternUnits="userSpaceOnUse">
+          <path d="M10 240 V90 Q10 20 75 0 Q140 20 140 90 V240" fill="none" stroke="#02130a" stroke-width="7"/>
+          <path d="M35 240 V100 Q35 50 75 30 Q115 50 115 100 V240" fill="none" stroke="#02130a" stroke-width="5"/>
+          <path d="M75 30 V240 M10 120 H140" stroke="#02130a" stroke-width="4"/>
+          <circle cx="75" cy="85" r="14" fill="none" stroke="#02130a" stroke-width="4"/>
+        </pattern>
+      </defs>
+      <rect width="1200" height="700" fill="url(#arch)"/>
+    </svg>
+  </div>
+  <div class="vignette"></div>
+  <div class="dust" id="dust"></div>
+
+  <button id="snd">🔊 Tap to enable sound</button>
+  <main id="main">
+    <div class="photo"><img src="foto.jpg" alt="Micaela" onerror="this.style.display='none'"></div>
+    <h1 id="title">Micaela's birthday is coming</h1>
+    <div class="clock" id="clock">
+      <div class="unit"><div class="num" id="mo">00</div><div class="label">Months</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="num" id="d">00</div><div class="label">Days</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="num" id="h">00</div><div class="label">Hours</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="num" id="m">00</div><div class="label">Minutes</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="num" id="s">00</div><div class="label">Seconds</div></div>
+    </div>
+  </main>
+
+<script>
+  // 28 de noviembre de 2026, 00:00 hora local (mes 10 = noviembre)
+  const target = new Date(2026, 10, 28, 0, 0, 0);
+  const pad = n => String(n).padStart(2, '0');
+  const $ = id => document.getElementById(id);
+
+  function tick() {
+    const now = new Date();
+    if (now >= target) {
+      $('main').classList.add('done');
+      $('title').textContent = "Happy Birthday, Micaela! 🎂";
+      $('clock').style.display = 'none';
+      return clearInterval(timer);
+    }
+    // meses calendario completos + resto
+    let months = (target.getFullYear() - now.getFullYear()) * 12 + target.getMonth() - now.getMonth();
+    let anchor = new Date(now); anchor.setMonth(now.getMonth() + months);
+    if (anchor > target) { months--; anchor = new Date(now); anchor.setMonth(now.getMonth() + months); }
+    let diff = Math.floor((target - anchor) / 1000);
+    const d = Math.floor(diff / 86400); diff %= 86400;
+    const h = Math.floor(diff / 3600);  diff %= 3600;
+    const m = Math.floor(diff / 60);
+    const s = diff % 60;
+    $('mo').textContent = pad(months); $('d').textContent = pad(d);
+    $('h').textContent = pad(h); $('m').textContent = pad(m); $('s').textContent = pad(s);
+  }
+  // Sonido tipo reloj: golpe grave + click corto, sintetizado (sin archivos)
+  let ctx = null;
+  function tickSound() {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(110, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.35);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.7, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+    const len = Math.floor(ctx.sampleRate * 0.03);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const n = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), ng = ctx.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 2500; ng.gain.value = 0.25;
+    n.buffer = buf; n.connect(hp).connect(ng).connect(ctx.destination); n.start(t);
+  }
+  $('snd').addEventListener('click', () => {
+    if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    ctx.resume();
+    $('snd').style.display = 'none';
+  });
+
+  const timer = setInterval(() => { tick(); tickSound(); }, 1000); tick();
+
+  // partículas
+  const dust = $('dust');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('i');
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = (60 + Math.random() * 50) + '%';
+    p.style.animationDuration = (10 + Math.random() * 14) + 's';
+    p.style.animationDelay = (-Math.random() * 20) + 's';
+    dust.appendChild(p);
+  }
+</script>
+</body>
+</html>
