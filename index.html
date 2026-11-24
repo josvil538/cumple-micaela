@@ -44,6 +44,12 @@
   .unit { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .num { font-size: clamp(44px, 9vw, 110px); font-weight: 600; line-height: 1; letter-spacing: .06em;
          font-variant-numeric: tabular-nums; text-shadow: 0 0 25px rgba(0,0,0,.7); }
+  .num { display: grid; overflow: hidden; padding: .08em .12em; margin: -.08em -.12em; }
+  .num span { grid-area: 1 / 1; text-align: center; }
+  .num span.in  { animation: slideIn  .45s cubic-bezier(.22,.9,.3,1) both; }
+  .num span.out { animation: slideOut .45s cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes slideIn  { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
   .label { font-size: clamp(9px, 1.1vw, 14px); letter-spacing: .12em; font-weight: 700; text-transform: uppercase; opacity: .9; }
   .sep { font-size: clamp(36px, 7vw, 90px); font-weight: 600; line-height: 1.05; opacity: .9; }
 
@@ -113,8 +119,22 @@
     const h = Math.floor(diff / 3600);  diff %= 3600;
     const m = Math.floor(diff / 60);
     const s = diff % 60;
-    $('mo').textContent = pad(months); $('d').textContent = pad(d);
-    $('h').textContent = pad(h); $('m').textContent = pad(m); $('s').textContent = pad(s);
+    setNum($('mo'), pad(months)); setNum($('d'), pad(d));
+    setNum($('h'), pad(h)); setNum($('m'), pad(m)); setNum($('s'), pad(s));
+  }
+  // El número nuevo sube desde abajo y empuja al anterior hacia arriba
+  function setNum(el, val) {
+    const cur = el.querySelector('span:not(.out)');
+    if (cur && cur.textContent === val) return;
+    const next = document.createElement('span');
+    next.textContent = val;
+    if (!cur) el.textContent = '';   // quita el "00" inicial del HTML
+    if (cur) {
+      cur.classList.add('out');
+      next.classList.add('in');
+      setTimeout(() => cur.remove(), 500);
+    }
+    el.appendChild(next);
   }
   // Sonido: solo tick.mp3 (~41 s), de corrido en bucle. Al terminar vuelve a empezar solo.
   let muted = false;
