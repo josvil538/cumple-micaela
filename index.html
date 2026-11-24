@@ -22,11 +22,14 @@
       linear-gradient(#0a0305, #060a05);
   }
   /* humo de magia del caos girando despacio */
-  .bg::after { content: ""; position: absolute; inset: -30%; opacity: .35; filter: blur(60px);
+  .bg::after { content: ""; position: absolute; inset: -30%; opacity: .12; filter: blur(60px);
     background: conic-gradient(from 0deg at 50% 55%, #ff1f3d, transparent 18%, #4dff4d 32%, transparent 50%, #c4002b 68%, transparent 82%, #ff1f3d);
     animation: swirl 40s linear infinite; }
   @keyframes swirl { to { transform: rotate(360deg); } }
-  .vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.9) 100%); }
+  .vignette { position: fixed; inset: 0; background:
+    radial-gradient(ellipse 55% 60% at 45% 70%, rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 55%, transparent 80%),
+    radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.88) 100%); }
+  #glass { position: fixed; inset: 0; width: 100%; height: 100%; }
 
   /* brasas */
   .dust { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
@@ -82,6 +85,7 @@
 </head>
 <body>
   <div class="bg"></div>
+  <canvas id="glass"></canvas>
   <div class="vignette"></div>
   <div class="dust" id="dust"></div>
 
@@ -227,6 +231,72 @@
   wantPlay = true;   // si el navegador lo permite, suena apenas carga
 
   const timer = setInterval(tick, 1000); tick();
+
+  // Vitral gótico verde procedural (ventanas ojivales con paneles de colores y plomo negro)
+  (function () {
+    const cv = $('glass'), g = cv.getContext('2d');
+    let seed = 7;
+    const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+                        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    function draw() {
+      seed = 7;
+      const W = cv.width = innerWidth, H = cv.height = innerHeight;
+      const w = Math.max(64, W / 24), h = w * 2.6, gx = W * 0.8, gy = H * 0.3, sig = Math.max(W, H) * 0.32;
+      g.fillStyle = '#031006'; g.fillRect(0, 0, W, H);
+      const lead = Math.max(2, w * 0.045);
+      for (let row = -1; row * h < H + h; row++) {
+        for (let col = -1; col * w < W + w; col++) {
+          const x = col * w, y = row * h, top = y + w * 0.6;
+          g.save();
+          g.beginPath();
+          g.moveTo(x, y + h); g.lineTo(x, top);
+          g.quadraticCurveTo(x, y + w * 0.12, x + w / 2, y);
+          g.quadraticCurveTo(x + w, y + w * 0.12, x + w, top);
+          g.lineTo(x + w, y + h); g.closePath();
+          g.clip();
+          // paneles: 3 tiras verticales cortadas en tramos al azar
+          const strips = [0, 0.18, 0.4, 0.6, 0.82, 1];
+          for (let i = 0; i < 5; i++) {
+            let yy = y;
+            while (yy < y + h) {
+              const ph = h * (0.05 + rnd() * 0.12);
+              const cx = x + w * (strips[i] + strips[i + 1]) / 2, cy = yy + ph / 2;
+              const glow = Math.exp(-((cx - gx) ** 2 + (cy - gy) ** 2) / (2 * sig * sig));
+              const red = rnd() < 0.07;
+              const hue = red ? 350 + rnd() * 12 : 62 + rnd() * 110;     // amarillo-verde a verde azulado
+              const sat = 55 + rnd() * 30;
+              const light = 8 + rnd() * 16 + glow * (34 + rnd() * 26);
+              const L = Math.min(light, 80), pw = w * (strips[i + 1] - strips[i]);
+              const gr = g.createLinearGradient(0, yy, 0, yy + ph);
+              gr.addColorStop(0, `hsl(${hue % 360},${sat}%,${Math.min(L + 8, 85)}%)`);
+              gr.addColorStop(1, `hsl(${hue % 360},${sat}%,${Math.max(L - 8, 4)}%)`);
+              g.fillStyle = gr;
+              g.fillRect(x + w * strips[i], yy, pw, ph + 1);
+              yy += ph;
+            }
+          }
+          g.restore();
+          // plomo negro: contorno + divisiones
+          g.strokeStyle = '#020a04'; g.lineWidth = lead * 1.6;
+          g.beginPath();
+          g.moveTo(x, y + h); g.lineTo(x, top);
+          g.quadraticCurveTo(x, y + w * 0.12, x + w / 2, y);
+          g.quadraticCurveTo(x + w, y + w * 0.12, x + w, top);
+          g.lineTo(x + w, y + h); g.stroke();
+          g.lineWidth = lead;
+          g.beginPath();
+          for (const f of [0.18, 0.4, 0.6, 0.82]) { g.moveTo(x + w * f, y + w * 0.25); g.lineTo(x + w * f, y + h); }
+          g.stroke();
+        }
+      }
+      // luz intensa al fondo derecho, como la del reloj original
+      const rg = g.createRadialGradient(gx, gy, 0, gx, gy, sig * 0.9);
+      rg.addColorStop(0, 'rgba(235,255,170,.55)'); rg.addColorStop(1, 'rgba(235,255,170,0)');
+      g.fillStyle = rg; g.fillRect(0, 0, W, H);
+    }
+    draw();
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
+  })();
 
   // partículas
   const dust = $('dust');
