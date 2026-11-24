@@ -73,10 +73,15 @@
           gap: 28px; cursor: pointer; background: rgba(2,6,3,.82); backdrop-filter: blur(14px); transition: opacity .8s ease; text-align: center; padding: 16px; }
   #gate.hide { opacity: 0; pointer-events: none; }
   #gate h2 { font-size: clamp(16px, 2.6vw, 30px); letter-spacing: .2em; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 24px rgba(109,255,58,.5); }
-  #gate .ring { width: 96px; height: 96px; border-radius: 50%; border: 2px solid rgba(180,255,120,.9); display: grid; place-items: center;
-                box-shadow: 0 0 30px 4px rgba(109,255,58,.5); animation: pulse 2.4s ease-in-out infinite; }
-  #gate .ring svg { margin-left: 6px; }
-  #gate small { font-size: 12px; letter-spacing: .3em; opacity: .75; font-weight: 600; text-transform: uppercase; }
+  #gate .cover { position: relative; width: min(86vw, 620px); aspect-ratio: 1080 / 920; border-radius: 8px; overflow: hidden;
+                 border: 2px solid rgba(255,70,80,.9); box-shadow: 0 0 40px 6px rgba(255,40,60,.55), 0 0 100px 20px rgba(80,255,80,.2);
+                 animation: pulse 3s ease-in-out infinite; }
+  #gate .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #gate .play { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; transform: translate(-50%, -50%);
+                border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.35); backdrop-filter: blur(3px);
+                border: 2px solid rgba(255,255,255,.75); transition: transform .2s ease, background .2s ease; }
+  #gate .play svg { margin-left: 5px; opacity: .9; }
+  #gate:hover .play { transform: translate(-50%, -50%) scale(1.08); background: rgba(0,0,0,.5); }
   #snd { position: fixed; top: 16px; left: 16px; z-index: 5; display: flex; align-items: center; height: 44px;
          padding: 0 8px; border-radius: 999px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
   #vicon { background: none; border: 0; cursor: pointer; display: grid; place-items: center; padding: 4px; }
@@ -100,9 +105,11 @@
   <div class="dust" id="dust"></div>
 
   <div id="gate">
-    <h2>Micaela's birthday is coming</h2>
-    <div class="ring"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M6 4l14 8-14 8z"/></svg></div>
-    <small>Tap to enter</small>
+    <div class="cover">
+      <img src="portada.webp" alt="">
+      <div class="play"><svg width="44" height="44" viewBox="0 0 24 24" fill="#fff"><path d="M7 4.5l13 7.5-13 7.5z"/></svg></div>
+    </div>
+    <h2>Pulsa aquí</h2>
   </div>
   <div id="snd" class="high">
     <button id="vicon" aria-label="Volume">
