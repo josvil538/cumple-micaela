@@ -118,18 +118,18 @@
   // Sonido tipo reloj: golpe grave + click corto, sintetizado (sin archivos)
   let ctx = null, muted = false, unlocked = false;
   // Si existe tick.mp3 en la carpeta, se usa ese sonido (1 segundo por tic); si no, el sintetizado
-  const tickFile = new Audio('tick.mp3');
-  let tickFileOk = false;
-  tickFile.addEventListener('canplaythrough', () => tickFileOk = true);
+  // Cada tic reproduce el archivo completo en su propia instancia, así el eco/rebote
+  // de un tic sigue sonando de fondo mientras empieza el siguiente.
+  const tickFile = new Audio('tick.mp3');   // solo para detectar si el archivo existe
   tickFile.preload = 'auto';
-  let stopTimer = null;
+  const playing = new Set();
   function playFile() {
-    clearTimeout(stopTimer);
-    tickFile.pause();
-    tickFile.currentTime = 0;
-    tickFile.play().then(() => { unlocked = true; }).catch(() => {});
-    stopTimer = setTimeout(() => tickFile.pause(), 950);
+    const a = new Audio('tick.mp3');
+    playing.add(a);
+    a.addEventListener('ended', () => playing.delete(a));
+    a.play().then(() => { unlocked = true; }).catch(() => playing.delete(a));
   }
+  function stopAll() { playing.forEach(a => a.pause()); playing.clear(); }
   let lastTickAt = 0;
   function tickSound() {
     if (muted) return;
@@ -170,7 +170,7 @@
     e.stopPropagation();
     muted = !muted;
     if (muted) {
-      clearTimeout(stopTimer); tickFile.pause();
+      stopAll();
       if (ctx && ctx.state === 'running') ctx.suspend();
     } else if (ctx) { ctx.resume(); }
     $('snd').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
