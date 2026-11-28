@@ -103,6 +103,20 @@
          text-transform: uppercase; text-shadow: 0 0 22px rgba(255,60,120,.85), 0 2px 12px rgba(0,0,0,.9); }
   body.party h1 { font-size: clamp(30px, 7vw, 90px); text-shadow: 0 0 30px rgba(255,60,120,.9), 0 2px 20px rgba(0,0,0,.8); }
   @media (max-width: 640px) { #cats img { width: 70px; opacity: .85; } #cats .c2, #cats .c5 { display: none; } }
+  /* Galería de fotos (solo el día del cumpleaños): la página se vuelve desplazable */
+  #gallery { display: none; }
+  html.party, html.party body { overflow-y: auto; height: auto; }
+  html.party main { height: auto; min-height: 100vh; }
+  html.party #gallery { display: block; position: relative; z-index: 2; padding: 6vh 4vw 12vh; }
+  #gallery .grid { column-count: 4; column-gap: 22px; max-width: 1300px; margin: 0 auto; }
+  #gallery figure { break-inside: avoid; margin: 0 0 26px; padding: 10px 10px 10px; background: #fff; border-radius: 4px;
+                    box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 30px rgba(255,60,100,.35); transition: transform .3s ease; }
+  #gallery figure:nth-child(odd)  { transform: rotate(-2.2deg); }
+  #gallery figure:nth-child(even) { transform: rotate(2deg); }
+  #gallery figure:hover { transform: rotate(0) scale(1.04); z-index: 3; }
+  #gallery img { display: block; width: 100%; height: auto; }
+  @media (max-width: 900px) { #gallery .grid { column-count: 3; } }
+  @media (max-width: 640px) { #gallery .grid { column-count: 2; column-gap: 14px; } #gallery figure { margin-bottom: 16px; padding: 6px; } }
   #snd { position: fixed; top: 16px; left: 16px; z-index: 5; display: flex; align-items: center; height: 44px;
          padding: 0 8px; border-radius: 999px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
   #vicon { background: none; border: 0; cursor: pointer; display: grid; place-items: center; padding: 4px; }
@@ -125,6 +139,16 @@
   <div class="vignette"></div>
   <div class="dust" id="dust"></div>
 
+  <section id="gallery"><div class="grid">
+      <figure><img loading="lazy" src="fotos/foto1.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto2.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto3.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto4.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto5.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto6.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto7.webp" alt=""></figure>
+      <figure><img loading="lazy" src="fotos/foto8.webp" alt=""></figure>
+  </div></section>
   <div id="cats">
     <img class="c1" src="gato1.png" alt="">
     <img class="c2" src="gato2.webp" alt="">
@@ -183,7 +207,7 @@
     if (now >= target) {
       $('main').classList.add('done');
       $('title').textContent = "Feliz cumple mi mor!!!";
-      document.body.classList.add('party');
+      document.body.classList.add('party'); document.documentElement.classList.add('party');
       if (!$('confetti').children.length) {
         const cols = ['#ff3d6e', '#ffd23d', '#4dd2ff', '#7dff5a', '#c77dff', '#ff8a3d'];
         for (let i = 0; i < 70; i++) {
