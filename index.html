@@ -103,20 +103,29 @@
          text-transform: uppercase; text-shadow: 0 0 22px rgba(255,60,120,.85), 0 2px 12px rgba(0,0,0,.9); }
   body.party h1 { font-size: clamp(30px, 7vw, 90px); text-shadow: 0 0 30px rgba(255,60,120,.9), 0 2px 20px rgba(0,0,0,.8); }
   @media (max-width: 640px) { #cats img { width: 70px; opacity: .85; } #cats .c2, #cats .c5 { display: none; } }
-  /* Galería de fotos (solo el día del cumpleaños): la página se vuelve desplazable */
-  #gallery { display: none; }
-  html.party, html.party body { overflow-y: auto; height: auto; }
-  html.party main { height: auto; min-height: 100vh; }
-  html.party #gallery { display: block; position: relative; z-index: 2; padding: 6vh 4vw 12vh; }
-  #gallery .grid { column-count: 4; column-gap: 22px; max-width: 1300px; margin: 0 auto; }
-  #gallery figure { break-inside: avoid; margin: 0 0 26px; padding: 10px 10px 10px; background: #fff; border-radius: 4px;
-                    box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 30px rgba(255,60,100,.35); transition: transform .3s ease; }
-  #gallery figure:nth-child(odd)  { transform: rotate(-2.2deg); }
-  #gallery figure:nth-child(even) { transform: rotate(2deg); }
-  #gallery figure:hover { transform: rotate(0) scale(1.04); z-index: 3; }
-  #gallery img { display: block; width: 100%; height: auto; }
-  @media (max-width: 900px) { #gallery .grid { column-count: 3; } }
-  @media (max-width: 640px) { #gallery .grid { column-count: 2; column-gap: 14px; } #gallery figure { margin-bottom: 16px; padding: 6px; } }
+  /* Fotos rebotando por toda la pantalla (modo cumpleaños) */
+  #bounce { display: none; position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  body.party #bounce { display: block; }
+  #bounce .bp { position: absolute; left: 0; top: 0; width: clamp(80px, 11vw, 160px); height: auto; padding: 5px; background: #fff; border-radius: 3px;
+                box-shadow: 0 6px 20px rgba(0,0,0,.7), 0 0 22px rgba(255,60,100,.45); pointer-events: auto; cursor: zoom-in; will-change: transform; }
+  #lightbox { position: fixed; inset: 0; z-index: 25; display: none; align-items: center; justify-content: center; padding: 3vh 3vw;
+              background: rgba(0,0,0,.88); cursor: zoom-out; }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 94vw; max-height: 94vh; border: 8px solid #fff; border-radius: 4px; box-shadow: 0 0 60px rgba(255,60,100,.6); }
+  body.party .throne { height: min(34vh, 56vw); }
+  body.party .side { height: min(28vh, 44vw); }
+  @media (max-width: 640px) {
+    main { gap: 1.4vh; padding: 12px; }
+    body.party .stage { gap: 10px; }
+    body.party .throne { height: min(24vh, 62vw); }
+    body.party .side { height: min(18vh, 46vw); }
+    body.party h1 { font-size: clamp(24px, 8.5vw, 42px); }
+    #msg { font-size: 12px; letter-spacing: .06em; }
+    #bounce .bp { width: 62px; padding: 3px; }
+    #cats img { width: 58px; }
+    #lightbox { padding: 2vh 2vw; }
+    #lightbox img { border-width: 5px; }
+  }
   /* Candado: pide la contraseña mientras la página carga todo por detrás */
   #lock { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
           gap: 26px; padding: 20px; text-align: center; background: rgba(2,6,3,.985); transition: opacity .6s ease; }
@@ -155,16 +164,17 @@
   <div class="vignette"></div>
   <div class="dust" id="dust"></div>
 
-  <section id="gallery"><div class="grid">
-      <figure><img loading="lazy" src="fotos/foto1.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto2.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto3.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto4.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto5.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto6.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto7.webp" alt=""></figure>
-      <figure><img loading="lazy" src="fotos/foto8.webp" alt=""></figure>
-  </div></section>
+  <div id="bounce">
+    <img class="bp" src="fotos/foto1.webp" alt="">
+    <img class="bp" src="fotos/foto2.webp" alt="">
+    <img class="bp" src="fotos/foto3.webp" alt="">
+    <img class="bp" src="fotos/foto4.webp" alt="">
+    <img class="bp" src="fotos/foto5.webp" alt="">
+    <img class="bp" src="fotos/foto6.webp" alt="">
+    <img class="bp" src="fotos/foto7.webp" alt="">
+    <img class="bp" src="fotos/foto8.webp" alt="">
+  </div>
+  <div id="lightbox"><img alt=""></div>
   <div id="cats">
     <img class="c1" src="gato1.png" alt="">
     <img class="c2" src="gato2.webp" alt="">
@@ -231,7 +241,7 @@
     if (now >= target) {
       $('main').classList.add('done');
       $('title').textContent = "Feliz cumple mi mor!!!";
-      document.body.classList.add('party'); document.documentElement.classList.add('party');
+      document.body.classList.add('party'); startBounce();
       if (!$('confetti').children.length) {
         const cols = ['#ff3d6e', '#ffd23d', '#4dd2ff', '#7dff5a', '#c77dff', '#ff8a3d'];
         for (let i = 0; i < 70; i++) {
@@ -344,6 +354,43 @@
   let saved = 0.8;
   try { const sv = localStorage.getItem('vol'); if (sv !== null) saved = +sv; } catch (e) {}
   applyVolume(saved);
+  // Fotos rebotando como el protector de pantalla; clic = verla grande, se pausan mientras tanto
+  function startBounce() {
+    const items = Array.from(document.querySelectorAll('#bounce .bp'));
+    if (!items.length || startBounce.done) return;
+    startBounce.done = true;
+    const W = () => innerWidth, H = () => innerHeight, k = innerWidth < 640 ? 0.55 : 1;   // más lentas en celular
+    const st = items.map((el, i) => ({
+      el, x: Math.random() * (W() - 160), y: Math.random() * (H() - 160),
+      vx: (0.6 + Math.random() * 0.9) * (i % 2 ? 1 : -1), vy: (0.5 + Math.random() * 0.9) * (i % 3 ? 1 : -1), hover: false
+    }));
+    st.forEach(o => {
+      o.el.addEventListener('mouseenter', () => o.hover = true);
+      o.el.addEventListener('mouseleave', () => o.hover = false);
+      o.el.addEventListener('click', () => {
+        $('lightbox').firstElementChild.src = o.el.src;
+        $('lightbox').classList.add('open');
+      });
+    });
+    const lb = $('lightbox');
+    lb.addEventListener('click', () => lb.classList.remove('open'));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('open'); });
+    function frame() {
+      const paused = lb.classList.contains('open');
+      st.forEach(o => {
+        if (!paused && !o.hover) {
+          const w = o.el.offsetWidth, h = o.el.offsetHeight;
+          o.x += o.vx * k; o.y += o.vy * k;
+          if (o.x <= 0) { o.x = 0; o.vx = Math.abs(o.vx); } else if (o.x + w >= W()) { o.x = W() - w; o.vx = -Math.abs(o.vx); }
+          if (o.y <= 0) { o.y = 0; o.vy = Math.abs(o.vy); } else if (o.y + h >= H()) { o.y = H() - h; o.vy = -Math.abs(o.vy); }
+        }
+        o.el.style.transform = `translate(${o.x}px, ${o.y}px)`;
+      });
+      requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
   // Contraseña (se compara su huella SHA-256, sin guardar el texto) y precarga de todo mientras tanto
   const PW_HASH = 'c1e5e128e38d29152a9693f1e3d9b1fafcd121a59f4536f3c5da0f3b28c9f355';
   // SHA-256 en JS puro, por si el navegador no ofrece crypto.subtle (páginas no seguras)
