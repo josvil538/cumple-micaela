@@ -173,6 +173,15 @@
     <img class="bp" src="fotos/foto6.webp" alt="">
     <img class="bp" src="fotos/foto7.webp" alt="">
     <img class="bp" src="fotos/foto8.webp" alt="">
+    <img class="bp" src="fotos/foto9.webp" alt="">
+    <img class="bp" src="fotos/foto10.webp" alt="">
+    <img class="bp" src="fotos/foto11.webp" alt="">
+    <img class="bp" src="fotos/foto12.webp" alt="">
+    <img class="bp" src="fotos/foto13.webp" alt="">
+    <img class="bp" src="fotos/foto14.webp" alt="">
+    <img class="bp" src="fotos/foto15.webp" alt="">
+    <img class="bp" src="fotos/foto16.webp" alt="">
+    <img class="bp" src="fotos/foto17.webp" alt="">
   </div>
   <div id="lightbox"><img alt=""></div>
   <div id="cats">
@@ -446,7 +455,7 @@
   setTimeout(() => { const pw = $('pw'); if (pw) pw.focus(); }, 100);
   // precarga: imágenes y audios se descargan ahora, así todo está listo al entrar
   ['trono.jpg', 'foto.jpg', 'portada.webp', 'fondo.jpg', 'gato1.png', 'gato2.webp', 'gato3.webp', 'gato4.png', 'gato5.png', 'gato6.png']
-    .concat(Array.from({ length: 8 }, (_, i) => `fotos/foto${i + 1}.webp`))
+    .concat(Array.from({ length: 17 }, (_, i) => `fotos/foto${i + 1}.webp`))
     .forEach(u => { const im = new Image(); im.src = u; });
   ['cancion.mp3', 'tick.mp3'].forEach(u => fetch(u).catch(() => {}));
 
