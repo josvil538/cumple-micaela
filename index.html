@@ -401,7 +401,12 @@
   }
 
   // Contraseña (se compara su huella SHA-256, sin guardar el texto) y precarga de todo mientras tanto
-  const PW_HASH = 'c1e5e128e38d29152a9693f1e3d9b1fafcd121a59f4536f3c5da0f3b28c9f355';
+  const PW_HASHES = [
+    'c1e5e128e38d29152a9693f1e3d9b1fafcd121a59f4536f3c5da0f3b28c9f355',
+    'fc26365623b39924ae631e6fc00720b19697a31305c78e5d0273195d5ac3b451',
+    '022189f64593749b479dca070ac3ca4bece073e5b861d3ec2ea9de6deda1ff1d',
+    'aa4ff0214703c114d41fb0298f0a6bcd9d8849e37a405eb502cdd16823ab9786'
+  ];   // varias contraseñas válidas
   // SHA-256 en JS puro, por si el navegador no ofrece crypto.subtle (páginas no seguras)
   function sha256js(msg) {
     const K = []; let pc = 0;
@@ -442,7 +447,7 @@
   $('lockForm').addEventListener('submit', async e => {
     e.preventDefault();
     let ok = false;
-    try { ok = (await sha256($('pw').value.trim().toUpperCase())) === PW_HASH; } catch (err) {}
+    try { ok = PW_HASHES.includes(await sha256($('pw').value.trim().toUpperCase())); } catch (err) {}
     if (ok) {
       $('lock').classList.add('hide');
       setTimeout(() => $('lock').remove(), 700);
