@@ -117,6 +117,22 @@
   #gallery img { display: block; width: 100%; height: auto; }
   @media (max-width: 900px) { #gallery .grid { column-count: 3; } }
   @media (max-width: 640px) { #gallery .grid { column-count: 2; column-gap: 14px; } #gallery figure { margin-bottom: 16px; padding: 6px; } }
+  /* Candado: pide la contraseña mientras la página carga todo por detrás */
+  #lock { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 26px; padding: 20px; text-align: center; background: rgba(2,6,3,.985); transition: opacity .6s ease; }
+  #lock.hide { opacity: 0; pointer-events: none; }
+  #lock h2 { font-size: clamp(15px, 2.4vw, 28px); letter-spacing: .18em; text-transform: uppercase; font-weight: 700; max-width: 900px; line-height: 1.5;
+             text-shadow: 0 0 24px rgba(255,60,100,.6); }
+  #lock form { display: flex; gap: 10px; width: min(92vw, 460px); }
+  #lock input { flex: 1; min-width: 0; padding: 14px 18px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.55);
+                background: rgba(255,255,255,.07); color: #fff; font: 600 16px 'Montserrat', sans-serif; letter-spacing: .25em; text-align: center; outline: none; }
+  #lock input:focus { border-color: #ff4d7a; box-shadow: 0 0 18px rgba(255,60,100,.5); }
+  #lock button { padding: 0 22px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.75); background: rgba(255,255,255,.1); color: #fff;
+                 font: 700 14px 'Montserrat', sans-serif; cursor: pointer; }
+  #lock button:hover { background: rgba(255,60,100,.35); }
+  #lock .err { height: 18px; font-size: 13px; letter-spacing: .12em; color: #ff6b8a; font-weight: 600; }
+  #lock.shake form { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
   #snd { position: fixed; top: 16px; left: 16px; z-index: 5; display: flex; align-items: center; height: 44px;
          padding: 0 8px; border-radius: 999px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
   #vicon { background: none; border: 0; cursor: pointer; display: grid; place-items: center; padding: 4px; }
@@ -158,6 +174,14 @@
     <img class="c6" src="gato6.png" alt="">
   </div>
   <div id="confetti"></div>
+  <div id="lock">
+    <h2>Ingrese la contraseña que solo usted sabe</h2>
+    <form id="lockForm" autocomplete="off">
+      <input id="pw" type="password" aria-label="Contraseña" autofocus autocomplete="off">
+      <button type="submit">Entrar</button>
+    </form>
+    <div class="err" id="lockErr"></div>
+  </div>
   <div id="gate">
     <div class="cover">
       <img src="portada.webp" alt="">
@@ -320,6 +344,65 @@
   let saved = 0.8;
   try { const sv = localStorage.getItem('vol'); if (sv !== null) saved = +sv; } catch (e) {}
   applyVolume(saved);
+  // Contraseña (se compara su huella SHA-256, sin guardar el texto) y precarga de todo mientras tanto
+  const PW_HASH = 'c1e5e128e38d29152a9693f1e3d9b1fafcd121a59f4536f3c5da0f3b28c9f355';
+  // SHA-256 en JS puro, por si el navegador no ofrece crypto.subtle (páginas no seguras)
+  function sha256js(msg) {
+    const K = []; let pc = 0;
+    const H = [];
+    for (let c = 2; pc < 64; c++) {
+      let prime = true; for (let d = 2; d * d <= c; d++) if (c % d === 0) { prime = false; break; }
+      if (prime) { if (pc < 8) H[pc] = (Math.pow(c, 1 / 2) % 1) * 4294967296 | 0; K[pc++] = (Math.pow(c, 1 / 3) % 1) * 4294967296 | 0; }
+    }
+    const bytes = Array.from(new TextEncoder().encode(msg)), bl = bytes.length * 8;
+    bytes.push(0x80); while (bytes.length % 64 !== 56) bytes.push(0);
+    for (let i = 7; i >= 0; i--) bytes.push(i > 3 ? 0 : (bl >>> (i * 8)) & 255);
+    const rr = (v, a) => (v >>> a) | (v << (32 - a));
+    for (let o = 0; o < bytes.length; o += 64) {
+      const w = [];
+      for (let i = 0; i < 16; i++) w[i] = (bytes[o + 4 * i] << 24) | (bytes[o + 4 * i + 1] << 16) | (bytes[o + 4 * i + 2] << 8) | bytes[o + 4 * i + 3];
+      for (let i = 16; i < 64; i++) {
+        const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3), s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      let [a, b, c, d, e, f, g, h] = H;
+      for (let i = 0; i < 64; i++) {
+        const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25), ch = (e & f) ^ (~e & g), t1 = (h + S1 + ch + K[i] + w[i]) | 0;
+        const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22), mj = (a & b) ^ (a & c) ^ (b & c), t2 = (S0 + mj) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+    }
+    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+  }
+  async function sha256(t) {
+    if (window.crypto && crypto.subtle) {
+      const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+      return Array.from(new Uint8Array(d)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    return sha256js(t);
+  }
+  $('lockForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    let ok = false;
+    try { ok = (await sha256($('pw').value.trim().toUpperCase())) === PW_HASH; } catch (err) {}
+    if (ok) {
+      $('lock').classList.add('hide');
+      setTimeout(() => $('lock').remove(), 700);
+    } else {
+      $('lockErr').textContent = 'Contraseña incorrecta';
+      $('lock').classList.remove('shake'); void $('lock').offsetWidth; $('lock').classList.add('shake');
+      $('pw').select();
+    }
+  });
+  setTimeout(() => { const pw = $('pw'); if (pw) pw.focus(); }, 100);
+  // precarga: imágenes y audios se descargan ahora, así todo está listo al entrar
+  ['trono.jpg', 'foto.jpg', 'portada.webp', 'fondo.jpg', 'gato1.png', 'gato2.webp', 'gato3.webp', 'gato4.png', 'gato5.png', 'gato6.png']
+    .concat(Array.from({ length: 8 }, (_, i) => `fotos/foto${i + 1}.webp`))
+    .forEach(u => { const im = new Image(); im.src = u; });
+  ['cancion.mp3', 'tick.mp3'].forEach(u => fetch(u).catch(() => {}));
+
   // Portada: el toque inicial arranca el reloj y abre la página
   $('gate').addEventListener('click', () => {
     playFile();
